@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This file also contains the default configuration, by default only the 
+	console is activated. Should you need additional logging please look at log4j2.template.xml, 
+	log4j2-dev.xml and log4j2-pro.xml. Java VM parameter to load this configuration: 
+	-Dlog4j.configurationFile=log4j2-local.xml -->
+<Configuration status="info" name="cscoap"
+	packages="de.gsi.cs.co.ap.common.dependencies.log4j2">
+
+	<Properties>
+		<Property name="messagePattern">%5p [%d{yyyy-mm-dd HH:mm:ss.SSS}][%t] (%F) -
+			%m%n
+		</Property>
+	</Properties>
+
+	<Appenders>
+		<Gelf name="LogstashGelf" host="udp:graylog.acc.gsi.de"
+			port="12201" version="1.1" extractStackTrace="true"
+			ignoreExceptions="false" originHost="%host{fqdn}"
+			includeFullMdc="true">
+			<!-- filterStackTrace="true" mdcProfiling="true" maximumMessageSize="8192" -->
+			<Field name="timestamp" pattern="%d{dd MMM yyyy HH:mm:ss,SSS}" />
+			<Field name="level" pattern="%level" />
+			<Field name="logger" pattern="%logger" />
+			<Field name="thread" pattern="%t" />
+			<Field name="pid" pattern="%pid" />
+			<Field name="program" pattern="${sys:app.name}" />
+			<Field name="user_name" pattern="${sys:user.name}" />
+			<Field name="java_version" pattern="${sys:java.version}" />
+
+			<!-- Not needed, will be set by the server -->
+			<!-- <Field name="server" pattern="%host" /> -->
+			<!-- <Field name="server_fqdn" pattern="%host{fqdn}" /> -->
+
+			<!-- Not needed, same as logger name (or shorter) -->
+			<!-- <Field name="simpleClassName" pattern="%c{1}" /> -->
+
+			<!-- Works only if on the AsyncAppender includeLocation="true" is set, 
+				but has a huge performance impact -->
+			<!-- <Field name="className" pattern="%C" /> -->
+		</Gelf>
+
+		<Async name="AsyncSocket" bufferSize="256">
+			<AppenderRef ref="LogstashGelf" />
+		</Async>
+
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="${messagePattern}" />
+		</Console>
+
+	</Appenders>
+
+	<Loggers>
+		<!-- LOGGING ORDER: DEBUG, INFO, WARN, ERROR, FATAL -->
+		<Root level="info"> <!-- show only warn logging messages for libraries and external code -->
+			<AppenderRef ref="Console" />
+		</Root>
+		<Logger name="de.gsi.*" level="debug" />
+		<Logger name="ch.steinhagen.*" level="debug" />
+		<Logger name="cern.*" level="info" />
+		<Logger name="*" level="info" />
+	</Loggers>
+
+</Configuration>
