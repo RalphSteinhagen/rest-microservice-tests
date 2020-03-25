@@ -50,8 +50,6 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializer;
 
 import ch.steinhagen.rest.tcp.TCPServer;
-import de.gsi.dataset.utils.serializer.BinarySerialiser;
-import de.gsi.dataset.utils.serializer.FastByteBuffer;
 import io.javalin.Javalin;
 import io.javalin.core.compression.CompressionStrategy;
 import io.javalin.core.compression.Gzip;

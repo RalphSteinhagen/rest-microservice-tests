@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.google.gson.Gson;
@@ -19,6 +20,9 @@ public class WebFluxClient {
 	WebFluxClient() {
 		final String url = "http://localhost:8084";
 		client = WebClient.create(url);
+//		ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder().codecs(configurer -> configurer.defaultCodecs()
+//		        .maxInMemorySize(1024 * 1024 * 1000)).build();
+//		client = WebClient.builder().exchangeStrategies(exchangeStrategies).baseUrl(url).build();
 		clientCache.put(url, client);
 	}
 

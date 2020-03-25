@@ -10,21 +10,21 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
-import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import com.alibaba.fastjson.JSON;
 import com.google.gson.Gson;
 
 import ch.steinhagen.rest.RESTServer.MimeType;
 import ch.steinhagen.rest.tcp.TCPServer;
+import de.gsi.dataset.serializer.spi.FastByteBuffer;
 import de.gsi.dataset.spi.utils.Tuple;
-import de.gsi.dataset.utils.serializer.FastByteBuffer;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
