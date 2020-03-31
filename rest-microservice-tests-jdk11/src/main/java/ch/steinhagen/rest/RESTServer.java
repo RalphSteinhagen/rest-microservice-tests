@@ -10,12 +10,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import javax.servlet.ServletOutputStream;
+
+import org.jetbrains.annotations.NotNull;
 import org.rapidoid.config.Conf;
 import org.rapidoid.http.MediaType;
 import org.rapidoid.setup.Admin;
@@ -53,6 +57,7 @@ import ch.steinhagen.rest.tcp.TCPServer;
 import io.javalin.Javalin;
 import io.javalin.core.compression.CompressionStrategy;
 import io.javalin.core.compression.Gzip;
+import io.javalin.http.Context;
 import io.javalin.http.sse.SseClient;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockWebServer;
@@ -178,26 +183,22 @@ public class RESTServer { // NOPMD - nomen est omen
             String type = ctx.header(ACCEPT_HEADER);
             if (type == null || type.equalsIgnoreCase(MimeType.JSON.toString())) {
                 // ctx.contentType(MimeType.JSON.toString()).result(gson.toJson(new MyBinaryData(buffer)));
-                ctx.contentType(MimeType.JSON.toString()).result(JSON.toJSONString(new MyBinaryData(BYTE_BUFFER)));
+                // ctx.contentType(MimeType.JSON.toString()).result(JSON.toJSONString(new MyBinaryData(BYTE_BUFFER)));
                 // ctx.contentType(MimeType.JSON.toString()).result(JavalinJson.toJson(new MyBinaryData(buffer)));
-
+                
+                // alt 1:
+                final String returnString = JSON.toJSONString(new MyBinaryData(BYTE_BUFFER));
+                final byte[] bytes = returnString.getBytes(StandardCharsets.UTF_8);
+                // alt 2:
+                // final byte[] bytes = JSON.toJSONBytes(new MyBinaryData(BYTE_BUFFER));                
+                 writeBytesToContext(ctx, bytes, bytes.length);
                 return;
             } else if (type.equalsIgnoreCase(MimeType.BINARY.toString())) {
-                try (InputStream targetStream = new ByteArrayInputStream(BYTE_BUFFER)) {
-                    // normal mime type
-                    ctx.contentType(MimeType.BINARY.toString()).result(targetStream);
-                } catch (Exception e) {
-                    LOGGER.atError().setCause(e);
-                }
+                writeBytesToContext(ctx, BYTE_BUFFER, BYTE_BUFFER.length);
                 return;
             }
-
-            try (InputStream targetStream = new ByteArrayInputStream(BYTE_BUFFER)) {
-                // normal mime type
-                ctx.contentType(MimeType.BINARY.toString()).result(targetStream);
-            } catch (Exception e) {
-                LOGGER.atError().setCause(e);
-            }
+            // default return type for unspecified mime type
+            writeBytesToContext(ctx, BYTE_BUFFER, BYTE_BUFFER.length);
         });
 
         // https://javalin.io/news/2019/01/17/javalin-2.6.0-released.html
@@ -237,6 +238,24 @@ public class RESTServer { // NOPMD - nomen est omen
         if (LOGGER.isInfoEnabled()) {
             LOGGER.atInfo().log("init javalinServer()");
         }
+    }
+    
+    
+    protected static void writeBytesToContext(@NotNull final Context ctx, final byte[] bytes, final int nSize) {
+        // based on the suggestion at https://github.com/tipsy/javalin/issues/910
+        try (ServletOutputStream outputStream = ctx.res.getOutputStream()) {
+            outputStream.write(bytes, 0, nSize);
+        } catch (IOException e) {
+            LOGGER.atError().setCause(e);
+        }
+        
+        // old implementation:
+        // try (InputStream targetStream = new ByteArrayInputStream(BYTE_BUFFER)) {
+        //     // normal mime type
+        //     ctx.contentType(MimeType.BINARY.toString()).result(targetStream);
+        // } catch (Exception e) {
+        //     LOGGER.atError().setCause(e);
+        // }
     }
 
     public static void startMockOkHttpServer() {
